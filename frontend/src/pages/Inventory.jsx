@@ -1,18 +1,57 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { api } from '../services/api';
 import { mockInventory } from '../data/mockData';
 
 const Inventory = () => {
+  const [inventoryItems, setInventoryItems] = useState(mockInventory);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('All');
 
-  const categories = ['All', ...new Set(mockInventory.map((item) => item.category))];
+  useEffect(() => {
+    const fetchInventory = async () => {
+      try {
+        const response = await api.getInventory();
+        const rows = Array.isArray(response?.data) ? response.data : [];
 
-  const filteredInventory = mockInventory.filter((item) => {
+        if (rows.length > 0) {
+          const normalized = rows.map((item, index) => {
+            const stock = Number(item.quantity || 0);
+            const minStock = Number(item.reorderLevel || 0);
+
+            return {
+              id: item._id || index + 1,
+              name: item.productName || item.sku,
+              sku: item.sku,
+              category: item.category || 'General',
+              stock,
+              minStock,
+              status: stock <= Math.max(5, minStock / 2)
+                ? 'Critical'
+                : stock <= minStock
+                  ? 'Low Stock'
+                  : 'In Stock',
+              price: Number(item.unitCost || 0)
+            };
+          });
+
+          setInventoryItems(normalized);
+        }
+      } catch (error) {
+        // Keep mock data when backend is unavailable.
+      }
+    };
+
+    fetchInventory();
+  }, []);
+
+  const categories = ['All', ...new Set(inventoryItems.map((item) => item.category))];
+
+  const filteredInventory = useMemo(() => inventoryItems.filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.sku.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = filterCategory === 'All' || item.category === filterCategory;
     return matchesSearch && matchesCategory;
-  });
+  }), [inventoryItems, searchTerm, filterCategory]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -28,10 +67,10 @@ const Inventory = () => {
   };
 
   const stockStats = {
-    total: mockInventory.length,
-    inStock: mockInventory.filter((i) => i.status === 'In Stock').length,
-    lowStock: mockInventory.filter((i) => i.status === 'Low Stock').length,
-    critical: mockInventory.filter((i) => i.status === 'Critical').length,
+    total: inventoryItems.length,
+    inStock: inventoryItems.filter((i) => i.status === 'In Stock').length,
+    lowStock: inventoryItems.filter((i) => i.status === 'Low Stock').length,
+    critical: inventoryItems.filter((i) => i.status === 'Critical').length,
   };
 
   return (

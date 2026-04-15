@@ -1,0 +1,15 @@
+{
+  "name": "sia-monorepo",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "concurrently -k -n FRONTEND,BACKEND,SERVICES -c cyan,green,magenta \"npm --prefix frontend run dev\" \"npm --prefix backend run dev\" \"python -m uvicorn api.service_api:app --app-dir services --host 0.0.0.0 --port 8000 --reload\"",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:services": "python -m uvicorn api.service_api:app --app-dir services --host 0.0.0.0 --port 8000 --reload",
+    "install:all": "npm --prefix frontend install && npm --prefix backend install"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { api } from '../services/api';
 import { mockShipments } from '../data/mockData';
 
 const Tracking = () => {
@@ -6,7 +7,7 @@ const Tracking = () => {
   const [searchedShipment, setSearchedShipment] = useState(null);
   const [error, setError] = useState('');
 
-  const handleTrack = (e) => {
+  const handleTrack = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -15,17 +16,35 @@ const Tracking = () => {
       return;
     }
 
-    // Search for shipment
-    const found = mockShipments.find(
-      (s) => s.id.toLowerCase() === trackingId.toLowerCase()
-    );
+    try {
+      const response = await api.getTracking(trackingId.trim());
+      const data = response?.data;
+
+      if (data) {
+        const mapped = {
+          id: data.trackingId,
+          origin: data.origin,
+          destination: data.destination,
+          status: data.status === 'DELIVERED' ? 'Delivered' : data.status === 'IN_TRANSIT' ? 'In Transit' : 'Pending',
+          eta: data.eta ? new Date(data.eta).toLocaleDateString() : 'TBD',
+          progress: data.status === 'DELIVERED' ? 100 : data.status === 'IN_TRANSIT' ? 65 : 20
+        };
+        setSearchedShipment(mapped);
+        return;
+      }
+    } catch (error) {
+      // Fall through to local mock search when API data is unavailable.
+    }
+
+    const found = mockShipments.find((s) => s.id.toLowerCase() === trackingId.toLowerCase());
 
     if (found) {
       setSearchedShipment(found);
-    } else {
-      setError('Shipment not found. Please check your tracking ID.');
-      setSearchedShipment(null);
+      return;
     }
+
+    setError('Shipment not found. Please check your tracking ID.');
+    setSearchedShipment(null);
   };
 
   const getProgressColor = (status) => {

@@ -1,8 +1,11 @@
 import { useState } from 'react';
+import { api } from '../services/api';
 import { mockSupplies } from '../data/mockData';
 
 const Supply = () => {
   const [showForm, setShowForm] = useState(false);
+  const [supplies, setSupplies] = useState(mockSupplies);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     supplier: '',
     product: '',
@@ -12,19 +15,60 @@ const Supply = () => {
   });
   const [generatedId, setGeneratedId] = useState(null);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Generate transaction ID
-    const transactionId = `TXN-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
-    setGeneratedId(transactionId);
-    setShowForm(false);
-    setFormData({
-      supplier: '',
-      product: '',
-      quantity: '',
-      unitPrice: '',
-      route: 'Sea Freight',
-    });
+
+    setIsSubmitting(true);
+    const quantity = Number(formData.quantity || 0);
+    const unitPrice = Number(formData.unitPrice || 0);
+    const sku = formData.product
+      .replace(/[^a-zA-Z0-9 ]/g, '')
+      .trim()
+      .toUpperCase()
+      .split(/\s+/)
+      .slice(0, 2)
+      .join('-') || `SKU-${Date.now().toString(36).toUpperCase()}`;
+
+    try {
+      const response = await api.createSupply({
+        sku,
+        productName: formData.product,
+        warehouse: formData.supplier,
+        quantity,
+        unitCost: unitPrice
+      });
+
+      const item = response?.data;
+      const generated = `TXN-${(item?._id || Date.now().toString(36)).toString().slice(-8).toUpperCase()}`;
+      setGeneratedId(generated);
+
+      setSupplies((prev) => [
+        {
+          id: Date.now(),
+          supplier: formData.supplier,
+          product: formData.product,
+          quantity,
+          unitPrice,
+          total: quantity * unitPrice,
+          status: 'Active',
+          route: formData.route
+        },
+        ...prev
+      ]);
+    } catch (error) {
+      const transactionId = `TXN-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+      setGeneratedId(transactionId);
+    } finally {
+      setIsSubmitting(false);
+      setShowForm(false);
+      setFormData({
+        supplier: '',
+        product: '',
+        quantity: '',
+        unitPrice: '',
+        route: 'Sea Freight',
+      });
+    }
   };
 
   const statusColors = {
@@ -157,9 +201,10 @@ const Supply = () => {
               )}
               <button
                 type="submit"
+                disabled={isSubmitting}
                 className="w-full bg-primary text-white py-3 rounded-xl font-medium hover:bg-primary-hover transition-all shadow-soft hover:shadow-medium"
               >
-                Generate Transaction
+                {isSubmitting ? 'Submitting...' : 'Generate Transaction'}
               </button>
             </form>
           </div>
@@ -228,7 +273,7 @@ const Supply = () => {
               </tr>
             </thead>
             <tbody>
-              {mockSupplies.map((supply, index) => (
+              {supplies.map((supply, index) => (
                 <tr
                   key={supply.id}
                   className={`border-b border-border last:border-b-0 hover:bg-bg-secondary transition-colors ${

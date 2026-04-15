@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react';
 import { MetricCard, AlertCard, ShipmentCard, InsightCard } from '../components/Cards';
 import { DemandSupplyChart, ProgressRing } from '../components/Charts';
+import { api } from '../services/api';
 import {
   mockMetrics,
   mockDemandSupplyData,
@@ -9,6 +11,50 @@ import {
 } from '../data/mockData';
 
 const Dashboard = () => {
+  const [chartData, setChartData] = useState(mockDemandSupplyData);
+  const [insights, setInsights] = useState(mockInsights);
+
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      try {
+        const [demandResponse, insightsResponse] = await Promise.all([
+          api.getDemand(),
+          api.getInsights()
+        ]);
+
+        const forecastRows = demandResponse?.data?.forecast || [];
+        if (Array.isArray(forecastRows) && forecastRows.length > 0) {
+          const transformed = forecastRows.map((item) => {
+            const date = new Date(item.ds || item.date);
+            const label = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+            const demand = Math.max(0, Math.round(Number(item.yhat || 0)));
+            return {
+              month: label,
+              demand,
+              supply: Math.max(0, Math.round(demand * 0.96))
+            };
+          });
+          setChartData(transformed);
+        }
+
+        const recommendationText = insightsResponse?.data?.recommendations;
+        if (typeof recommendationText === 'string' && recommendationText.trim()) {
+          setInsights([
+            {
+              title: 'AI Operational Recommendations',
+              description: recommendationText,
+              impact: 'high'
+            }
+          ]);
+        }
+      } catch (error) {
+        // Keep mock content if backend data is not available.
+      }
+    };
+
+    loadDashboardData();
+  }, []);
+
   return (
     <div className="p-4 lg:p-6 space-y-6">
       {/* Header */}
@@ -73,7 +119,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Chart Section - Takes 2 columns */}
         <div className="lg:col-span-2">
-          <DemandSupplyChart data={mockDemandSupplyData} />
+          <DemandSupplyChart data={chartData} />
         </div>
 
         {/* On-Time Delivery Ring */}
@@ -140,7 +186,7 @@ const Dashboard = () => {
             </button>
           </div>
           <div className="space-y-3">
-            {mockInsights.map((insight, index) => (
+            {insights.map((insight, index) => (
               <InsightCard key={index} insight={insight} />
             ))}
           </div>

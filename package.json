@@ -1,0 +1,20 @@
+{
+  "name": "sia-main",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "frontend": "cd frontend && npm run dev",
+    "backend": "cd backend && npm run dev",
+    "services": "cd services && ./run_services.sh",
+    "dev": "concurrently \"npm run frontend\" \"npm run backend\" \"npm run services\"",
+    "setup": "npm install && cd frontend && npm install && cd ../backend && npm install && cd ../services && python3 -m venv venv && ./venv/bin/pip install -r requirements.txt"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

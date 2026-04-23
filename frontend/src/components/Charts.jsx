@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   LineChart,
   Line,
@@ -9,16 +9,15 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer,
   AreaChart,
   Area,
 } from 'recharts';
 
-const ResponsiveChartShell = ({ className = '', children, minHeight }) => {
+const useMeasuredSize = () => {
   const containerRef = useRef(null);
-  const [isReady, setIsReady] = useState(false);
+  const [size, setSize] = useState({ width: 0, height: 0 });
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const element = containerRef.current;
 
     if (!element) {
@@ -27,25 +26,40 @@ const ResponsiveChartShell = ({ className = '', children, minHeight }) => {
 
     const updateReadyState = () => {
       const { width, height } = element.getBoundingClientRect();
-      setIsReady(width > 0 && height > 0);
+      setSize({
+        width: Math.max(0, Math.floor(width)),
+        height: Math.max(0, Math.floor(height)),
+      });
     };
 
     updateReadyState();
 
-    if (typeof ResizeObserver === 'undefined') {
-      const fallbackTimer = window.setTimeout(updateReadyState, 0);
-      return () => window.clearTimeout(fallbackTimer);
+    let observer;
+    if (typeof ResizeObserver !== 'undefined') {
+      observer = new ResizeObserver(updateReadyState);
+      observer.observe(element);
+    } else {
+      window.addEventListener('resize', updateReadyState);
     }
 
-    const observer = new ResizeObserver(updateReadyState);
-    observer.observe(element);
-
-    return () => observer.disconnect();
+    return () => {
+      if (observer) {
+        observer.disconnect();
+      } else {
+        window.removeEventListener('resize', updateReadyState);
+      }
+    };
   }, []);
+
+  return [containerRef, size];
+};
+
+const ResponsiveChartShell = ({ className = '', children, minHeight }) => {
+  const [containerRef, size] = useMeasuredSize();
 
   return (
     <div ref={containerRef} className={className} style={minHeight ? { minHeight } : undefined}>
-      {isReady ? children : null}
+      {size.width > 0 && size.height > 0 ? children(size) : null}
     </div>
   );
 };
@@ -93,8 +107,8 @@ export const DemandSupplyChart = ({ data }) => {
         </div>
       </div>
       <ResponsiveChartShell className="h-80 min-w-0" minHeight={320}>
-        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={320}>
-          <AreaChart data={data}>
+        {({ width, height }) => (
+          <AreaChart width={width} height={height} data={data}>
             <defs>
               <linearGradient id="colorDemand" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#34A853" stopOpacity={0.3}/>
@@ -139,7 +153,7 @@ export const DemandSupplyChart = ({ data }) => {
               fill="url(#colorSupply)"
             />
           </AreaChart>
-        </ResponsiveContainer>
+        )}
       </ResponsiveChartShell>
     </div>
   );
@@ -151,8 +165,8 @@ export const SimpleBarChart = ({ data, dataKey, name, color = '#34A853' }) => {
     <div className="bg-white rounded-2xl p-6 shadow-soft">
       <h3 className="font-display font-semibold text-lg text-text-primary mb-6">{name}</h3>
       <ResponsiveChartShell className="h-64 min-w-0" minHeight={256}>
-        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={256}>
-          <BarChart data={data}>
+        {({ width, height }) => (
+          <BarChart width={width} height={height} data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} />
             <XAxis
               dataKey={dataKey}
@@ -174,7 +188,7 @@ export const SimpleBarChart = ({ data, dataKey, name, color = '#34A853' }) => {
               radius={[8, 8, 0, 0]}
             />
           </BarChart>
-        </ResponsiveContainer>
+        )}
       </ResponsiveChartShell>
     </div>
   );

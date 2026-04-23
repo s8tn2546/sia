@@ -340,7 +340,7 @@ const Inventory = () => {
                     <td className="px-6 py-4 text-sm text-text-secondary">{item.category}</td>
                     <td className="px-6 py-4 text-sm font-medium text-text-primary">{item.stock}</td>
                     <td className="px-6 py-4 text-sm text-text-secondary">{item.minStock}</td>
-                    <td className="px-6 py-4 text-sm font-medium text-text-primary">${item.price.toFixed(2)}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-text-primary">₹{item.price.toFixed(2)}</td>
                     <td className="px-6 py-4">
                       <span className={`text-xs px-3 py-1 rounded-full font-medium ${getStatusColor(item.status)}`}>
                         {item.status}

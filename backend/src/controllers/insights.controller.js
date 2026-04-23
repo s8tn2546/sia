@@ -2,7 +2,7 @@ const { asyncHandler, apiResponse } = require("../utils/helpers");
 const llmService = require("../services/llm.service");
 
 const getInsights = asyncHandler(async (req, res) => {
-  const insights = await llmService.getInsights();
+  const insights = await llmService.getInsights(req.body || {});
   return apiResponse(res, insights, "Insights fetched");
 });
 

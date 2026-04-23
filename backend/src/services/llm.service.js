@@ -11,8 +11,8 @@ const askChatbot = async (payload) => {
   return data;
 };
 
-const getInsights = async () => {
-  const { data } = await llmApi.get("/insights");
+const getInsights = async (payload = {}) => {
+  const { data } = await llmApi.post("/insights", payload);
   return data;
 };
 

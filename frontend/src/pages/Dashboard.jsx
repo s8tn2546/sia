@@ -34,14 +34,51 @@ const Dashboard = () => {
       setLoading(true);
       setError('');
       try {
-        const [inventoryRes, demandRes, insightsRes] = await Promise.all([
+        const [inventoryRes, demandRes] = await Promise.all([
           api.getInventory(),
           api.getDemand(),
-          api.getInsights(),
         ]);
 
         const inventoryData = inventoryRes?.data || [];
         const forecastData = demandRes?.data?.forecast || [];
+        const totalInventory = Array.isArray(inventoryData)
+          ? inventoryData.reduce((sum, item) => sum + Number(item.quantity || 0), 0)
+          : 0;
+        const lowStockCount = Array.isArray(inventoryData)
+          ? inventoryData.filter((item) => Number(item.quantity || 0) <= Number(item.reorderLevel || 0)).length
+          : 0;
+        const demandAverage = Array.isArray(forecastData) && forecastData.length
+          ? forecastData.reduce((sum, row) => sum + Number(row.yhat || 0), 0) / forecastData.length
+          : 0;
+        const normalizedItems = Array.isArray(inventoryData)
+          ? inventoryData.map((item) => ({
+              productName: item.productName,
+              sku: item.sku,
+              warehouse: item.warehouse,
+              quantity: Number(item.quantity || 0),
+              reorderLevel: Number(item.reorderLevel || 0),
+            }))
+          : [];
+        const criticalItems = normalizedItems.filter(
+          (item) => item.quantity <= Math.max(5, Math.floor(item.reorderLevel * 0.5))
+        );
+        const lowStockItems = normalizedItems.filter(
+          (item) => item.quantity <= item.reorderLevel && !criticalItems.includes(item)
+        );
+
+        const insightsRes = await api.getInsights({
+          source: 'dashboard',
+          inventory: {
+            total: normalizedItems.length,
+            inStock: normalizedItems.filter((item) => item.quantity > item.reorderLevel).length,
+            lowStock: lowStockItems.length,
+            critical: criticalItems.length,
+            items: normalizedItems.slice(0, 5),
+          },
+          demand_trend: demandAverage > 0 ? 'steady' : 'unknown',
+          delay_risk: lowStockCount > 0 ? 'high' : 'low',
+        });
+
         const parsedInsights = parseInsights(insightsRes?.data?.recommendations);
 
         setInventory(Array.isArray(inventoryData) ? inventoryData : []);

@@ -50,7 +50,11 @@ export const api = {
     }),
   getTracking: (trackingId) => request(`/track/${encodeURIComponent(trackingId)}`),
   getDemand: () => request("/demand"),
-  getInsights: () => request("/insights"),
+  getInsights: (payload) =>
+    request("/insights", {
+      method: "POST",
+      body: JSON.stringify(payload || {})
+    }),
   getChat: (payload) =>
     request("/chat", {
       method: "POST",

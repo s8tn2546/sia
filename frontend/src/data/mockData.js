@@ -89,7 +89,7 @@ export const mockInsights = [
   },
   {
     title: 'Route Optimization Opportunity',
-    description: 'Switching to alternative shipping routes could save $12,400 monthly.',
+    description: 'Switching to alternative shipping routes could save ₹12,400 monthly.',
     impact: 'medium',
   },
   {

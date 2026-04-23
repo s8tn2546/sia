@@ -12,7 +12,7 @@ import Supply from './pages/Supply';
 import Inventory from './pages/Inventory';
 import Tracking from './pages/Tracking';
 import Profile from './pages/Profile';
-import Assistant from './pages/Assistant';
+import Chatbot from './pages/Chatbot';
 import './styles/main.css';
 
 // Layout component for dashboard pages
@@ -86,7 +86,7 @@ function App() {
             path="/assistant"
             element={
               <DashboardLayout>
-                <Assistant />
+                <Chatbot />
               </DashboardLayout>
             }
           />

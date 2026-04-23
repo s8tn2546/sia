@@ -308,7 +308,7 @@ const Supply = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-text-primary mb-2">
-                    Unit Price ($)
+                    Unit Price (₹)
                   </label>
                   <input
                     type="number"
@@ -346,7 +346,7 @@ const Supply = () => {
                     routeOptions.map((route, index) => {
                       const label = route.label || route.summary || `Option ${index + 1}`;
                       const eta = route.durationMin ? `${route.durationMin} min` : 'ETA n/a';
-                      const cost = route.estimatedCost ? `$${route.estimatedCost}` : '';
+                      const cost = route.estimatedCost ? `₹${route.estimatedCost}` : '';
                       return (
                         <option key={`${label}-${index}`} value={label}>
                           {`${label} (${eta}) ${cost}`.trim()}
@@ -363,7 +363,7 @@ const Supply = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-text-secondary">Total Cost</span>
                     <span className="text-xl font-display font-semibold text-dark-green">
-                      ${(parseFloat(formData.quantity) * parseFloat(formData.unitPrice)).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      ₹{(parseFloat(formData.quantity) * parseFloat(formData.unitPrice)).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
                 </div>
@@ -442,8 +442,8 @@ const Supply = () => {
                     <td className="px-6 py-4 text-sm font-medium text-text-primary">{supply.supplier}</td>
                     <td className="px-6 py-4 text-sm text-text-secondary">{supply.product}</td>
                     <td className="px-6 py-4 text-sm text-text-secondary">{supply.quantity.toLocaleString()}</td>
-                    <td className="px-6 py-4 text-sm text-text-secondary">${supply.unitPrice.toFixed(2)}</td>
-                    <td className="px-6 py-4 text-sm font-medium text-text-primary">${supply.total.toLocaleString()}</td>
+                    <td className="px-6 py-4 text-sm text-text-secondary">₹{supply.unitPrice.toFixed(2)}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-text-primary">₹{supply.total.toLocaleString()}</td>
                     <td className="px-6 py-4 text-sm text-text-secondary">{supply.route}</td>
                     <td className="px-6 py-4">
                       <span className={`text-xs px-3 py-1 rounded-full font-medium ${statusColors[supply.status] || 'bg-bg-secondary text-text-secondary'}`}>

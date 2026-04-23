@@ -193,7 +193,7 @@ const RouteOptimization = () => {
               >
                 <div className="flex items-center justify-between mb-2">
                   <p className="font-medium text-text-primary">{route.mode}</p>
-                  <span className="text-sm font-semibold text-primary">${route.estimatedCost}</span>
+                  <span className="text-sm font-semibold text-primary">₹{route.estimatedCost}</span>
                 </div>
                 <div className="space-y-1 text-xs text-text-secondary">
                   <p>Distance: {route.distanceKm} km</p>
@@ -233,13 +233,13 @@ const RouteOptimization = () => {
                 <div className="bg-bg-secondary rounded-xl p-4">
                   <p className="text-xs text-text-secondary mb-1">Base Cost</p>
                   <p className="text-2xl font-display font-semibold text-text-primary">
-                    ${selectedRoute.cost}
+                    ₹{selectedRoute.cost}
                   </p>
                 </div>
                 <div className="bg-bg-secondary rounded-xl p-4">
                   <p className="text-xs text-text-secondary mb-1">Tolls & Fees</p>
                   <p className="text-2xl font-display font-semibold text-text-primary">
-                    ${selectedRoute.toll}
+                    ₹{selectedRoute.toll}
                   </p>
                 </div>
               </div>
@@ -248,7 +248,7 @@ const RouteOptimization = () => {
               <div className="bg-primary/10 border-2 border-primary rounded-xl p-6 mb-6">
                 <p className="text-text-secondary mb-1">Estimated Total Cost</p>
                 <p className="text-4xl font-display font-semibold text-primary">
-                  ${selectedRoute.estimatedCost}
+                  ₹{selectedRoute.estimatedCost}
                 </p>
               </div>
 

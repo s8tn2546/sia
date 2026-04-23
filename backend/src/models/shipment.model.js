@@ -13,6 +13,7 @@ const checkpointSchema = new mongoose.Schema(
 const shipmentSchema = new mongoose.Schema(
   {
     trackingId: { type: String, required: true, unique: true, index: true },
+    transactionId: { type: String, index: true },
     origin: { type: String, required: true },
     destination: { type: String, required: true },
     eta: { type: Date },

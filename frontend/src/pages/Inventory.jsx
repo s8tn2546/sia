@@ -1,18 +1,89 @@
-import { useState } from 'react';
-import { mockInventory } from '../data/mockData';
+import { useEffect, useMemo, useState } from 'react';
+import { api } from '../services/api';
+
+const getStatus = (item) => {
+  const quantity = Number(item.quantity || 0);
+  const reorderLevel = Number(item.reorderLevel || 0);
+
+  if (quantity <= Math.max(5, Math.floor(reorderLevel * 0.5))) {
+    return 'Critical';
+  }
+
+  if (quantity <= reorderLevel) {
+    return 'Low Stock';
+  }
+
+  return 'In Stock';
+};
 
 const Inventory = () => {
+  const [inventory, setInventory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('All');
-
-  const categories = ['All', ...new Set(mockInventory.map((item) => item.category))];
-
-  const filteredInventory = mockInventory.filter((item) => {
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.sku.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = filterCategory === 'All' || item.category === filterCategory;
-    return matchesSearch && matchesCategory;
+  const [formData, setFormData] = useState({
+    productName: '',
+    sku: '',
+    warehouse: '',
+    quantity: '',
+    reorderLevel: '20',
+    unitCost: '',
   });
+
+  const loadInventory = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await api.getInventory();
+      setInventory(Array.isArray(response?.data) ? response.data : []);
+    } catch (err) {
+      setError('Failed to load inventory data. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadInventory();
+  }, []);
+
+  const categories = useMemo(() => {
+    const values = inventory.map((item) => item.warehouse).filter(Boolean);
+    return ['All', ...new Set(values)];
+  }, [inventory]);
+
+  const enrichedInventory = useMemo(() => {
+    return inventory.map((item) => ({
+      ...item,
+      status: getStatus(item),
+      stock: Number(item.quantity || 0),
+      minStock: Number(item.reorderLevel || 0),
+      name: item.productName,
+      price: Number(item.unitCost || 0),
+      category: item.warehouse || 'General',
+    }));
+  }, [inventory]);
+
+  const filteredInventory = useMemo(() => {
+    return enrichedInventory.filter((item) => {
+      const matchesSearch =
+        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.sku.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = filterCategory === 'All' || item.category === filterCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [enrichedInventory, searchTerm, filterCategory]);
+
+  const stockStats = useMemo(() => {
+    return {
+      total: enrichedInventory.length,
+      inStock: enrichedInventory.filter((i) => i.status === 'In Stock').length,
+      lowStock: enrichedInventory.filter((i) => i.status === 'Low Stock').length,
+      critical: enrichedInventory.filter((i) => i.status === 'Critical').length,
+    };
+  }, [enrichedInventory]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -27,16 +98,42 @@ const Inventory = () => {
     }
   };
 
-  const stockStats = {
-    total: mockInventory.length,
-    inStock: mockInventory.filter((i) => i.status === 'In Stock').length,
-    lowStock: mockInventory.filter((i) => i.status === 'Low Stock').length,
-    critical: mockInventory.filter((i) => i.status === 'Critical').length,
+  const handleAddProduct = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    try {
+      const payload = {
+        productName: formData.productName.trim(),
+        sku: formData.sku.trim().toUpperCase(),
+        warehouse: formData.warehouse.trim(),
+        quantity: Number(formData.quantity || 0),
+        reorderLevel: Number(formData.reorderLevel || 20),
+        unitCost: Number(formData.unitCost || 0),
+      };
+
+      const response = await api.createInventory(payload);
+      const item = response?.data;
+      if (item) {
+        setInventory((prev) => [item, ...prev]);
+      }
+
+      setFormData({
+        productName: '',
+        sku: '',
+        warehouse: '',
+        quantity: '',
+        reorderLevel: '20',
+        unitCost: '',
+      });
+      setShowForm(false);
+    } catch (err) {
+      setError('Failed to add product. Check SKU uniqueness and try again.');
+    }
   };
 
   return (
     <div className="p-4 lg:p-6 space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl lg:text-3xl font-display font-semibold text-text-primary mb-2">
@@ -46,7 +143,10 @@ const Inventory = () => {
             Track and manage your stock levels
           </p>
         </div>
-        <button className="bg-primary text-white px-6 py-3 rounded-xl font-medium hover:bg-primary-hover transition-all shadow-soft hover:shadow-medium flex items-center gap-2 w-fit">
+        <button
+          onClick={() => setShowForm(true)}
+          className="bg-primary text-white px-6 py-3 rounded-xl font-medium hover:bg-primary-hover transition-all shadow-soft hover:shadow-medium flex items-center gap-2 w-fit"
+        >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
@@ -54,7 +154,109 @@ const Inventory = () => {
         </button>
       </div>
 
-      {/* Stats Cards */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+          <p className="text-sm text-red-700">{error}</p>
+        </div>
+      )}
+
+      {showForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowForm(false)} />
+          <div className="relative bg-white rounded-2xl shadow-large max-w-lg w-full p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-display font-semibold text-text-primary">Add New Product</h2>
+              <button
+                onClick={() => setShowForm(false)}
+                className="p-2 hover:bg-bg-secondary rounded-xl transition-colors"
+              >
+                <svg className="w-5 h-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <form onSubmit={handleAddProduct} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-2">Product Name</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.productName}
+                  onChange={(e) => setFormData({ ...formData, productName: e.target.value })}
+                  className="input"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-2">SKU</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.sku}
+                    onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                    className="input"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-2">Warehouse</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.warehouse}
+                    onChange={(e) => setFormData({ ...formData, warehouse: e.target.value })}
+                    className="input"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-2">Quantity</label>
+                  <input
+                    type="number"
+                    min="0"
+                    required
+                    value={formData.quantity}
+                    onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                    className="input"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-2">Reorder</label>
+                  <input
+                    type="number"
+                    min="0"
+                    required
+                    value={formData.reorderLevel}
+                    onChange={(e) => setFormData({ ...formData, reorderLevel: e.target.value })}
+                    className="input"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-2">Unit Cost</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    required
+                    value={formData.unitCost}
+                    onChange={(e) => setFormData({ ...formData, unitCost: e.target.value })}
+                    className="input"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-primary text-white py-3 rounded-xl font-medium hover:bg-primary-hover transition-all shadow-soft hover:shadow-medium"
+              >
+                Save Product
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl p-4 shadow-soft">
           <p className="text-sm text-text-secondary mb-1">Total Products</p>
@@ -74,7 +276,6 @@ const Inventory = () => {
         </div>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <svg className="w-5 h-5 text-text-secondary absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -101,100 +302,57 @@ const Inventory = () => {
         </select>
       </div>
 
-      {/* Inventory Table */}
       <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-bg-secondary border-b border-border">
               <tr>
-                <th className="text-left text-sm font-medium text-text-secondary px-6 py-4">
-                  Product
-                </th>
-                <th className="text-left text-sm font-medium text-text-secondary px-6 py-4">
-                  SKU
-                </th>
-                <th className="text-left text-sm font-medium text-text-secondary px-6 py-4">
-                  Category
-                </th>
-                <th className="text-left text-sm font-medium text-text-secondary px-6 py-4">
-                  Stock
-                </th>
-                <th className="text-left text-sm font-medium text-text-secondary px-6 py-4">
-                  Min Stock
-                </th>
-                <th className="text-left text-sm font-medium text-text-secondary px-6 py-4">
-                  Price
-                </th>
-                <th className="text-left text-sm font-medium text-text-secondary px-6 py-4">
-                  Status
-                </th>
+                <th className="text-left text-sm font-medium text-text-secondary px-6 py-4">Product</th>
+                <th className="text-left text-sm font-medium text-text-secondary px-6 py-4">SKU</th>
+                <th className="text-left text-sm font-medium text-text-secondary px-6 py-4">Warehouse</th>
+                <th className="text-left text-sm font-medium text-text-secondary px-6 py-4">Stock</th>
+                <th className="text-left text-sm font-medium text-text-secondary px-6 py-4">Min Stock</th>
+                <th className="text-left text-sm font-medium text-text-secondary px-6 py-4">Unit Cost</th>
+                <th className="text-left text-sm font-medium text-text-secondary px-6 py-4">Status</th>
               </tr>
             </thead>
             <tbody>
-              {filteredInventory.map((item, index) => (
-                <tr
-                  key={item.id}
-                  className={`border-b border-border last:border-b-0 hover:bg-bg-secondary transition-colors ${
-                    index % 2 === 0 ? 'bg-white' : 'bg-bg-secondary/50'
-                  }`}
-                >
-                  <td className="px-6 py-4">
-                    <div>
-                      <p className="text-sm font-medium text-text-primary">{item.name}</p>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <code className="text-sm text-text-secondary bg-bg-secondary px-2 py-1 rounded">
-                      {item.sku}
-                    </code>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-text-secondary">
-                    {item.category}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-text-primary">{item.stock}</span>
-                      {item.stock <= item.minStock && (
-                        <svg className="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                        </svg>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-text-secondary">
-                    {item.minStock}
-                  </td>
-                  <td className="px-6 py-4 text-sm font-medium text-text-primary">
-                    ${item.price.toFixed(2)}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`text-xs px-3 py-1 rounded-full font-medium ${getStatusColor(item.status)}`}>
-                      {item.status}
-                    </span>
-                  </td>
+              {loading ? (
+                <tr>
+                  <td colSpan="7" className="px-6 py-8 text-center text-text-secondary">Loading inventory...</td>
                 </tr>
-              ))}
+              ) : filteredInventory.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="px-6 py-8 text-center text-text-secondary">No inventory items found.</td>
+                </tr>
+              ) : (
+                filteredInventory.map((item, index) => (
+                  <tr
+                    key={item._id}
+                    className={`border-b border-border last:border-b-0 hover:bg-bg-secondary transition-colors ${
+                      index % 2 === 0 ? 'bg-white' : 'bg-bg-secondary/50'
+                    }`}
+                  >
+                    <td className="px-6 py-4 text-sm font-medium text-text-primary">{item.name}</td>
+                    <td className="px-6 py-4">
+                      <code className="text-sm text-text-secondary bg-bg-secondary px-2 py-1 rounded">{item.sku}</code>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-text-secondary">{item.category}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-text-primary">{item.stock}</td>
+                    <td className="px-6 py-4 text-sm text-text-secondary">{item.minStock}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-text-primary">${item.price.toFixed(2)}</td>
+                    <td className="px-6 py-4">
+                      <span className={`text-xs px-3 py-1 rounded-full font-medium ${getStatusColor(item.status)}`}>
+                        {item.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </div>
-
-      {/* Low Stock Alert Banner */}
-      {stockStats.critical > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
-          <div className="flex items-start gap-3">
-            <svg className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <div>
-              <h4 className="font-medium text-red-800">Critical Stock Alert</h4>
-              <p className="text-sm text-red-700 mt-1">
-                {stockStats.critical} product(s) are at critically low levels and need immediate restocking.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

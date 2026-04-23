@@ -13,6 +13,7 @@ const insightsRoutes = require("./routes/insights.routes");
 const inventoryRoutes = require("./routes/inventory.routes");
 const supplyRoutes = require("./routes/supply.routes");
 const trackingRoutes = require("./routes/tracking.routes");
+const notificationRoutes = require("./routes/notification.routes");
 
 const app = express();
 
@@ -34,6 +35,7 @@ app.use("/api/insights", insightsRoutes);
 app.use("/api/inventory", inventoryRoutes);
 app.use("/api/supply", supplyRoutes);
 app.use("/api/track", trackingRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);

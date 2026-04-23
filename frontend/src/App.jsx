@@ -13,52 +13,24 @@ import Inventory from './pages/Inventory';
 import Tracking from './pages/Tracking';
 import Profile from './pages/Profile';
 import Assistant from './pages/Assistant';
-import Login from './pages/Login';
-import Signup from './pages/Signup';
-import { AuthProvider } from './context/AuthContext';
-import ProtectedRoute from './components/ProtectedRoute';
 import './styles/main.css';
 
 // Layout component for dashboard pages
 const DashboardLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [pageTitle, setPageTitle] = useState('');
 
   return (
     <ProtectedRoute>
       <div className="flex h-screen bg-bg-secondary">
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         <div className="flex-1 flex flex-col overflow-hidden">
-          <Navbar onMenuClick={() => setSidebarOpen(true)} title={pageTitle} />
+          <Navbar onMenuClick={() => setSidebarOpen(true)} />
           <main className="flex-1 overflow-y-auto">
             {children}
           </main>
         </div>
       </div>
     </ProtectedRoute>
-  );
-};
-
-// Page wrapper with title setting
-const Page = ({ children, title }) => {
-  return (
-    <>
-      <div className="mb-6">
-        <h1 className="text-2xl lg:text-3xl font-display font-semibold text-text-primary mb-2">
-          {title}
-        </h1>
-        <p className="text-text-secondary">
-          {title === 'Dashboard' && 'Overview of your supply chain performance'}
-          {title === 'Supply' && 'Manage suppliers and procurement'}
-          {title === 'Inventory' && 'Track and manage your stock levels'}
-          {title === 'Tracking' && 'Track your shipments in real-time'}
-          {title === 'Route Optimization' && 'Optimize your delivery routes'}
-          {title === 'AI Assistant' && 'Get intelligent supply chain insights'}
-          {title === 'Profile' && 'Manage your account settings'}
-        </p>
-      </div>
-      {children}
-    </>
   );
 };
 

@@ -1,9 +1,31 @@
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { api } from '../services/api';
 
 const Navbar = ({ onMenuClick, title = '' }) => {
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
+  const [openNotifications, setOpenNotifications] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const loadNotifications = async () => {
+    try {
+      const response = await api.getNotifications();
+      setNotifications(response?.data?.notifications || []);
+      setUnreadCount(Number(response?.data?.unreadCount || 0));
+    } catch {
+      setNotifications([]);
+      setUnreadCount(0);
+    }
+  };
+
+  useEffect(() => {
+    loadNotifications();
+    const timer = setInterval(loadNotifications, 30000);
+    return () => clearInterval(timer);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -17,6 +39,18 @@ const Navbar = ({ onMenuClick, title = '' }) => {
   const userData = {
     name: currentUser?.displayName || currentUser?.email?.split('@')[0] || 'User',
     role: 'Supply Chain Manager',
+  };
+
+  const handleNotificationClick = async (notification) => {
+    if (!notification.read) {
+      await api.markNotificationRead(notification._id);
+      await loadNotifications();
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    await api.markAllNotificationsRead();
+    await loadNotifications();
   };
 
   return (
@@ -44,12 +78,60 @@ const Navbar = ({ onMenuClick, title = '' }) => {
       {/* Right Section */}
       <div className="flex items-center gap-4">
         {/* Notifications */}
-        <button className="relative p-2 hover:bg-bg-secondary rounded-xl transition-colors">
-          <svg className="w-6 h-6 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-          </svg>
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full"></span>
-        </button>
+        <div className="relative">
+          <button
+            onClick={() => setOpenNotifications((prev) => !prev)}
+            className="relative p-2 hover:bg-bg-secondary rounded-xl transition-colors"
+          >
+            <svg className="w-6 h-6 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            {unreadCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-primary text-white text-[10px] rounded-full flex items-center justify-center">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </button>
+
+          {openNotifications && (
+            <div className="absolute right-0 mt-2 w-80 bg-white border border-border rounded-xl shadow-large z-50 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                <h3 className="font-medium text-text-primary">Notifications</h3>
+                <button
+                  onClick={handleMarkAllRead}
+                  className="text-xs font-medium text-primary hover:text-primary-hover"
+                >
+                  Mark all read
+                </button>
+              </div>
+              <div className="max-h-80 overflow-y-auto">
+                {notifications.length === 0 ? (
+                  <p className="px-4 py-6 text-sm text-text-secondary">No notifications yet.</p>
+                ) : (
+                  notifications.map((notification) => (
+                    <button
+                      key={notification._id}
+                      onClick={() => handleNotificationClick(notification)}
+                      className={`w-full text-left px-4 py-3 border-b border-border/60 hover:bg-bg-secondary transition-colors ${
+                        notification.read ? 'opacity-70' : ''
+                      }`}
+                    >
+                      <div className="flex items-start gap-2">
+                        {!notification.read && (
+                          <span className="w-2 h-2 mt-1.5 bg-primary rounded-full"></span>
+                        )}
+                        <div>
+                          <p className="text-sm font-medium text-text-primary">{notification.title}</p>
+                          <p className="text-xs text-text-secondary mt-1">{notification.message}</p>
+                        </div>
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* User Profile */}
         <div className="flex items-center gap-3 pl-4 border-l border-border">

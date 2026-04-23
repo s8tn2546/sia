@@ -1,5 +1,5 @@
 from typing import Optional
-from openai import OpenAI
+
 import google.generativeai as genai
 from google.api_core.exceptions import NotFound
 from openai import OpenAI
@@ -7,6 +7,12 @@ from openai import OpenAI
 from config.settings import settings
 from llm.context_builder import build_chat_context
 from llm.prompts import CHAT_SYSTEM_PROMPT
+
+
+def _gemini_candidates() -> list[str]:
+    preferred = (settings.gemini_model or "").strip()
+    candidates = [preferred, "gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]
+    return [model for model in candidates if model]
 
 
 def ask_llm(message: str, metadata: Optional[dict] = None) -> str:

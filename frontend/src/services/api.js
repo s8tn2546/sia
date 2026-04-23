@@ -21,6 +21,11 @@ const request = async (path, options = {}) => {
 
 export const api = {
   getInventory: () => request("/inventory"),
+  createInventory: (payload) =>
+    request("/inventory", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    }),
   createSupply: (payload) =>
     request("/supply", {
       method: "POST",
@@ -38,5 +43,14 @@ export const api = {
     request("/routes", {
       method: "POST",
       body: JSON.stringify(payload)
+    }),
+  getNotifications: () => request("/notifications"),
+  markNotificationRead: (id) =>
+    request(`/notifications/${encodeURIComponent(id)}/read`, {
+      method: "PATCH"
+    }),
+  markAllNotificationsRead: () =>
+    request("/notifications/read-all", {
+      method: "PATCH"
     })
 };

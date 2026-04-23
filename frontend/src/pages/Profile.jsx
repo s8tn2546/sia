@@ -1,8 +1,14 @@
-import { useState } from 'react';
-import { mockUserData } from '../data/mockData';
+import { useMemo, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 
 const Profile = () => {
-  const [userData] = useState(mockUserData);
+  const { currentUser } = useAuth();
+  const userData = useMemo(() => ({
+    name: currentUser?.displayName || 'SIA User',
+    email: currentUser?.email || 'not-set@example.com',
+    role: 'Supply Chain Manager',
+    company: 'SIA',
+  }), [currentUser]);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: userData.name,
@@ -23,7 +29,7 @@ const Profile = () => {
           Profile
         </h1>
         <p className="text-text-secondary">
-          Manage your account settings
+          Manage your profile
         </p>
       </div>
 
@@ -124,43 +130,6 @@ const Profile = () => {
         )}
       </div>
 
-      {/* Account Settings */}
-      <div className="bg-white rounded-2xl p-6 shadow-soft">
-        <h3 className="font-display font-semibold text-lg text-text-primary mb-6">
-          Account Settings
-        </h3>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-bg-secondary rounded-xl">
-            <div className="flex items-center gap-3">
-              <svg className="w-5 h-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-              <div>
-                <p className="font-medium text-text-primary">Email Notifications</p>
-                <p className="text-sm text-text-secondary">Receive updates about shipments and alerts</p>
-              </div>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" defaultChecked className="sr-only peer" />
-              <div className="w-11 h-6 bg-border peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-            </label>
-          </div>
-          <div className="flex items-center justify-between p-4 bg-bg-secondary rounded-xl">
-            <div className="flex items-center gap-3">
-              <svg className="w-5 h-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-              <div>
-                <p className="font-medium text-text-primary">Change Password</p>
-                <p className="text-sm text-text-secondary">Update your password securely</p>
-              </div>
-            </div>
-            <button className="text-sm font-medium text-primary hover:text-primary-hover">
-              Update
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

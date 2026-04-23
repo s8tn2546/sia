@@ -1,13 +1,19 @@
 import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
 import Landing from './pages/Landing';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Supply from './pages/Supply';
 import Inventory from './pages/Inventory';
 import Tracking from './pages/Tracking';
 import Profile from './pages/Profile';
+import Chatbot from './pages/Chatbot';
+import RouteOptimization from './pages/RouteOptimization';
 import './styles/main.css';
 
 // Layout component for dashboard pages
@@ -41,6 +47,8 @@ const Page = ({ children, title }) => {
           {title === 'Supply' && 'Manage suppliers and procurement'}
           {title === 'Inventory' && 'Track and manage your stock levels'}
           {title === 'Tracking' && 'Track your shipments in real-time'}
+          {title === 'Route Optimization' && 'Optimize your delivery routes'}
+          {title === 'AI Assistant' && 'Get intelligent supply chain insights'}
           {title === 'Profile' && 'Manage your account settings'}
         </p>
       </div>
@@ -51,52 +59,86 @@ const Page = ({ children, title }) => {
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route
-          path="/dashboard"
-          element={
-            <DashboardLayout>
-              <Dashboard />
-            </DashboardLayout>
-          }
-        />
-        <Route
-          path="/supply"
-          element={
-            <DashboardLayout>
-              <Supply />
-            </DashboardLayout>
-          }
-        />
-        <Route
-          path="/inventory"
-          element={
-            <DashboardLayout>
-              <Inventory />
-            </DashboardLayout>
-          }
-        />
-        <Route
-          path="/tracking"
-          element={
-            <DashboardLayout>
-              <Tracking />
-            </DashboardLayout>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <DashboardLayout>
-              <Profile />
-            </DashboardLayout>
-          }
-        />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Dashboard />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/supply"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Supply />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inventory"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Inventory />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tracking"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Tracking />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/routes"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <RouteOptimization />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/chatbot"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Chatbot />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Profile />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 

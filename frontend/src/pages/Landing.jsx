@@ -16,13 +16,13 @@ const Landing = () => {
                 to="/login"
                 className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors"
               >
-                Sign In
+                Get Started
               </Link>
               <Link
                 to="/signup"
                 className="bg-primary text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-primary-hover transition-all shadow-soft hover:shadow-medium"
               >
-                Get Started
+                Sign In
               </Link>
             </div>
           </div>
@@ -35,7 +35,7 @@ const Landing = () => {
           <div className="max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 bg-soft-green px-4 py-2 rounded-full mb-8">
               <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
-              <span className="text-sm font-medium text-dark-green">AI-Powered Intelligent Automation</span>
+            <span className="text-sm font-medium text-dark-green">AI-Powered Optimization</span>
             </div>
             <h1 className="text-5xl sm:text-6xl font-display font-semibold text-text-primary mb-6 leading-tight">
               SIA.<br />
@@ -50,13 +50,13 @@ const Landing = () => {
                 to="/signup"
                 className="w-full sm:w-auto bg-primary text-white px-8 py-4 rounded-xl font-medium hover:bg-primary-hover transition-all shadow-medium hover:shadow-large hover:-translate-y-0.5"
               >
-                Start Free Trial
+                Get Started Now
               </Link>
               <Link
-                to="/dashboard"
+                to="/login"
                 className="w-full sm:w-auto bg-white text-primary px-8 py-4 rounded-xl font-medium border-2 border-primary hover:bg-soft-green transition-all"
               >
-                Watch Demo
+                Sign In
               </Link>
             </div>
             <div className="mt-12 flex items-center justify-center gap-8 text-sm text-text-secondary">
@@ -64,7 +64,7 @@ const Landing = () => {
                 <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                <span>14-day free trial</span>
+                <span>Free to use</span>
               </div>
               <div className="flex items-center gap-2">
                 <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -76,7 +76,7 @@ const Landing = () => {
                 <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                <span>Cancel anytime</span>
+                <span>Instant access</span>
               </div>
             </div>
           </div>
@@ -333,13 +333,13 @@ const Landing = () => {
               to="/signup"
               className="w-full sm:w-auto bg-white text-primary px-8 py-4 rounded-xl font-medium hover:bg-bg-secondary transition-all shadow-large hover:-translate-y-0.5"
             >
-              Start Free Trial
+              Get Started Today
             </Link>
             <Link
-              to="/dashboard"
+              to="/login"
               className="w-full sm:w-auto bg-primary text-white px-8 py-4 rounded-xl font-medium border-2 border-white/30 hover:bg-primary-hover transition-all"
             >
-              Contact Sales
+              Sign In
             </Link>
           </div>
         </div>

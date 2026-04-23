@@ -159,48 +159,6 @@ const Profile = () => {
               Update
             </button>
           </div>
-          <div className="flex items-center justify-between p-4 bg-bg-secondary rounded-xl">
-            <div className="flex items-center gap-3">
-              <svg className="w-5 h-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-              <div>
-                <p className="font-medium text-text-primary">Logout</p>
-                <p className="text-sm text-text-secondary">Sign out of your account</p>
-              </div>
-            </div>
-            <button className="text-sm font-medium text-red-600 hover:text-red-700">
-              Logout
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* API Keys Section */}
-      <div className="bg-white rounded-2xl p-6 shadow-soft">
-        <h3 className="font-display font-semibold text-lg text-text-primary mb-6">
-          API Access
-        </h3>
-        <div className="bg-bg-secondary rounded-xl p-4">
-          <div className="flex items-center justify-between mb-2">
-            <p className="font-medium text-text-primary">API Key</p>
-            <button className="text-sm font-medium text-primary hover:text-primary-hover">
-              Regenerate
-            </button>
-          </div>
-          <div className="flex items-center gap-3">
-            <code className="flex-1 bg-white px-4 py-3 rounded-lg font-mono text-sm text-text-secondary overflow-x-auto">
-              sk_live_51H8K2L3M4N5O6P7Q8R9S0T1U2V3W4X5Y6Z7
-            </code>
-            <button className="p-3 hover:bg-bg-secondary rounded-lg transition-colors">
-              <svg className="w-5 h-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-            </button>
-          </div>
-          <p className="text-xs text-text-secondary mt-3">
-            Use this API key to integrate with your own applications. Keep it secret!
-          </p>
         </div>
       </div>
     </div>

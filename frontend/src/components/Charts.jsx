@@ -55,8 +55,8 @@ export const DemandSupplyChart = ({ data }) => {
           </div>
         </div>
       </div>
-      <div className="h-80">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="h-80 min-w-0">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={320}>
           <AreaChart data={data}>
             <defs>
               <linearGradient id="colorDemand" x1="0" y1="0" x2="0" y2="1">
@@ -113,8 +113,8 @@ export const SimpleBarChart = ({ data, dataKey, name, color = '#34A853' }) => {
   return (
     <div className="bg-white rounded-2xl p-6 shadow-soft">
       <h3 className="font-display font-semibold text-lg text-text-primary mb-6">{name}</h3>
-      <div className="h-64">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="h-64 min-w-0">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={256}>
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} />
             <XAxis

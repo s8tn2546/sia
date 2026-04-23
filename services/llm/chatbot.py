@@ -1,6 +1,8 @@
 from typing import Optional
 from openai import OpenAI
 import google.generativeai as genai
+from google.api_core.exceptions import NotFound
+from openai import OpenAI
 
 from config.settings import settings
 from llm.context_builder import build_chat_context
@@ -12,9 +14,17 @@ def ask_llm(message: str, metadata: Optional[dict] = None) -> str:
 
     if settings.llm_provider.lower() == "gemini" and settings.gemini_api_key:
         genai.configure(api_key=settings.gemini_api_key)
-        model = genai.GenerativeModel("gemini-1.5-flash")
-        response = model.generate_content(f"{CHAT_SYSTEM_PROMPT}\n\n{context}")
-        return response.text
+        prompt = f"{CHAT_SYSTEM_PROMPT}\n\n{context}"
+
+        for model_name in _gemini_candidates():
+            try:
+                model = genai.GenerativeModel(model_name)
+                response = model.generate_content(prompt)
+                return response.text
+            except NotFound:
+                continue
+
+        return "No supported Gemini model is available for this API key. Set GEMINI_MODEL to one returned by list_models()."
 
     if settings.openai_api_key:
         client = OpenAI(api_key=settings.openai_api_key)

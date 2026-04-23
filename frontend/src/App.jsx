@@ -1,8 +1,12 @@
 import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
 import Landing from './pages/Landing';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Supply from './pages/Supply';
 import Inventory from './pages/Inventory';
@@ -48,6 +52,8 @@ const Page = ({ children, title }) => {
           {title === 'Supply' && 'Manage suppliers and procurement'}
           {title === 'Inventory' && 'Track and manage your stock levels'}
           {title === 'Tracking' && 'Track your shipments in real-time'}
+          {title === 'Route Optimization' && 'Optimize your delivery routes'}
+          {title === 'AI Assistant' && 'Get intelligent supply chain insights'}
           {title === 'Profile' && 'Manage your account settings'}
         </p>
       </div>

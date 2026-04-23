@@ -12,6 +12,13 @@ const Chatbot = () => {
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [inventoryContext, setInventoryContext] = useState({
+    total: 0,
+    inStock: 0,
+    lowStock: 0,
+    critical: 0,
+    items: [],
+  });
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -21,6 +28,49 @@ const Chatbot = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    const loadInventoryContext = async () => {
+      try {
+        const response = await api.getInventory();
+        const items = Array.isArray(response?.data) ? response.data : [];
+        const normalizedItems = items.map((item) => ({
+          productName: item.productName,
+          sku: item.sku,
+          warehouse: item.warehouse,
+          quantity: Number(item.quantity || 0),
+          reorderLevel: Number(item.reorderLevel || 0),
+        }));
+
+        const criticalItems = normalizedItems.filter(
+          (item) => item.quantity <= Math.max(5, Math.floor(item.reorderLevel * 0.5))
+        );
+        const lowStockItems = normalizedItems.filter(
+          (item) => item.quantity <= item.reorderLevel && !criticalItems.includes(item)
+        );
+
+        setInventoryContext({
+          total: normalizedItems.length,
+          inStock: normalizedItems.filter(
+            (item) => item.quantity > item.reorderLevel
+          ).length,
+          lowStock: lowStockItems.length,
+          critical: criticalItems.length,
+          items: normalizedItems.slice(0, 5),
+        });
+      } catch (error) {
+        setInventoryContext({
+          total: 0,
+          inStock: 0,
+          lowStock: 0,
+          critical: 0,
+          items: [],
+        });
+      }
+    };
+
+    loadInventoryContext();
+  }, []);
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -42,7 +92,10 @@ const Chatbot = () => {
     try {
       const response = await api.getChat({
         message: input,
-        context: 'supply_chain_management',
+        context: {
+          source: 'supply_chain_management',
+          inventory: inventoryContext,
+        },
       });
 
       const botMessage = {

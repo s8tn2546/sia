@@ -3,8 +3,10 @@ const { asyncHandler, apiResponse } = require("../utils/helpers");
 const Shipment = require("../models/shipment.model");
 
 const getTracking = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
   const id = String(req.params.id || "").trim();
   const shipment = await Shipment.findOne({
+    userId,
     $or: [{ trackingId: id }, { transactionId: id }]
   }).lean();
 

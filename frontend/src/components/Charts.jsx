@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import {
   LineChart,
   Line,
@@ -12,6 +13,42 @@ import {
   AreaChart,
   Area,
 } from 'recharts';
+
+const ResponsiveChartShell = ({ className = '', children, minHeight }) => {
+  const containerRef = useRef(null);
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    const element = containerRef.current;
+
+    if (!element) {
+      return undefined;
+    }
+
+    const updateReadyState = () => {
+      const { width, height } = element.getBoundingClientRect();
+      setIsReady(width > 0 && height > 0);
+    };
+
+    updateReadyState();
+
+    if (typeof ResizeObserver === 'undefined') {
+      const fallbackTimer = window.setTimeout(updateReadyState, 0);
+      return () => window.clearTimeout(fallbackTimer);
+    }
+
+    const observer = new ResizeObserver(updateReadyState);
+    observer.observe(element);
+
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={containerRef} className={className} style={minHeight ? { minHeight } : undefined}>
+      {isReady ? children : null}
+    </div>
+  );
+};
 
 // Custom Tooltip Component
 const CustomTooltip = ({ active, payload, label }) => {
@@ -55,7 +92,7 @@ export const DemandSupplyChart = ({ data }) => {
           </div>
         </div>
       </div>
-      <div className="h-80 min-w-0">
+      <ResponsiveChartShell className="h-80 min-w-0" minHeight={320}>
         <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={320}>
           <AreaChart data={data}>
             <defs>
@@ -103,7 +140,7 @@ export const DemandSupplyChart = ({ data }) => {
             />
           </AreaChart>
         </ResponsiveContainer>
-      </div>
+      </ResponsiveChartShell>
     </div>
   );
 };
@@ -113,7 +150,7 @@ export const SimpleBarChart = ({ data, dataKey, name, color = '#34A853' }) => {
   return (
     <div className="bg-white rounded-2xl p-6 shadow-soft">
       <h3 className="font-display font-semibold text-lg text-text-primary mb-6">{name}</h3>
-      <div className="h-64 min-w-0">
+      <ResponsiveChartShell className="h-64 min-w-0" minHeight={256}>
         <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={256}>
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} />
@@ -138,7 +175,7 @@ export const SimpleBarChart = ({ data, dataKey, name, color = '#34A853' }) => {
             />
           </BarChart>
         </ResponsiveContainer>
-      </div>
+      </ResponsiveChartShell>
     </div>
   );
 };

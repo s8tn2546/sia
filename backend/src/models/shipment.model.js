@@ -12,6 +12,7 @@ const checkpointSchema = new mongoose.Schema(
 
 const shipmentSchema = new mongoose.Schema(
   {
+    userId: { type: String, required: true, index: true },
     trackingId: { type: String, required: true, unique: true, index: true },
     transactionId: { type: String, index: true },
     origin: { type: String, required: true },
@@ -27,5 +28,7 @@ const shipmentSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+shipmentSchema.index({ userId: 1, trackingId: 1 }, { unique: true });
 
 module.exports = mongoose.model("Shipment", shipmentSchema);

@@ -1,12 +1,29 @@
+import { auth } from '../config/firebase';
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 
 const buildUrl = (path) => `${API_BASE_URL}${path}`;
 
+const getAuthHeaders = async () => {
+  const user = auth.currentUser;
+
+  if (!user) {
+    return {};
+  }
+
+  const token = await user.getIdToken();
+
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
 const request = async (path, options = {}) => {
+  const authHeaders = await getAuthHeaders();
+
   const response = await fetch(buildUrl(path), {
     headers: {
       "Content-Type": "application/json",
-      ...(options.headers || {})
+      ...(options.headers || {}),
+      ...authHeaders
     },
     ...options
   });

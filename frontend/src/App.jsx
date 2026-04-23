@@ -13,6 +13,7 @@ import Inventory from './pages/Inventory';
 import Tracking from './pages/Tracking';
 import Profile from './pages/Profile';
 import Assistant from './pages/Assistant';
+import RouteOptimization from './pages/RouteOptimization';
 import './styles/main.css';
 
 // Layout component for dashboard pages
@@ -87,6 +88,14 @@ function App() {
             element={
               <DashboardLayout>
                 <Assistant />
+              </DashboardLayout>
+            }
+          />
+          <Route
+            path="/routes"
+            element={
+              <DashboardLayout>
+                <RouteOptimization />
               </DashboardLayout>
             }
           />

@@ -21,11 +21,17 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json({ limit: "1mb" }));
 app.use(loggerMiddleware);
-app.use(authMiddleware);
 
+// Public health check endpoint (before auth middleware)
 app.get("/health", (req, res) => {
   res.status(200).json({ success: true, message: "Backend healthy" });
 });
+
+app.head("/health", (req, res) => {
+  res.status(200).send();
+});
+
+app.use(authMiddleware);
 
 app.use("/api/demand", demandRoutes);
 app.use("/api/delay", delayRoutes);

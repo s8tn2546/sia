@@ -1,6 +1,6 @@
 import { auth } from '../config/firebase';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
+const API_BASE_URL = (process.env.BACKEND_URL || '').replace(/\/$/, '');
 
 const buildUrl = (path) => `${API_BASE_URL}${path}`;
 

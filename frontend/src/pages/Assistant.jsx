@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 
+const BACKEND_URL = (process.env.BACKEND_URL || '').replace(/\/$/, '');
+
 const Assistant = () => {
   const [messages, setMessages] = useState([
     { role: 'assistant', text: 'Hello! I am SIA, your Supply Chain AI Assistant. How can I help you today?' }
@@ -27,7 +29,7 @@ const Assistant = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/chat', {
+      const response = await fetch(`${BACKEND_URL}/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -34,10 +34,21 @@ const Dashboard = () => {
       setLoading(true);
       setError('');
       try {
-        const [inventoryRes, demandRes] = await Promise.all([
+        const [inventoryResult, demandResult] = await Promise.allSettled([
           api.getInventory(),
           api.getDemand(),
         ]);
+
+        if (inventoryResult.status !== 'fulfilled' && demandResult.status !== 'fulfilled') {
+          setError('Unable to load dashboard data right now. Please try again.');
+          setInventory([]);
+          setForecast([]);
+          setInsights([]);
+          return;
+        }
+
+        const inventoryRes = inventoryResult.status === 'fulfilled' ? inventoryResult.value : null;
+        const demandRes = demandResult.status === 'fulfilled' ? demandResult.value : null;
 
         const inventoryData = inventoryRes?.data || [];
         const forecastData = demandRes?.data?.forecast || [];
@@ -66,24 +77,38 @@ const Dashboard = () => {
           (item) => item.quantity <= item.reorderLevel && !criticalItems.includes(item)
         );
 
-        const insightsRes = await api.getInsights({
-          source: 'dashboard',
-          inventory: {
-            total: normalizedItems.length,
-            inStock: normalizedItems.filter((item) => item.quantity > item.reorderLevel).length,
-            lowStock: lowStockItems.length,
-            critical: criticalItems.length,
-            items: normalizedItems.slice(0, 5),
-          },
-          demand_trend: demandAverage > 0 ? 'steady' : 'unknown',
-          delay_risk: lowStockCount > 0 ? 'high' : 'low',
-        });
+        let parsedInsights = [];
+        let warning = '';
 
-        const parsedInsights = parseInsights(insightsRes?.data?.recommendations);
+        try {
+          const insightsRes = await api.getInsights({
+            source: 'dashboard',
+            inventory: {
+              total: normalizedItems.length,
+              inStock: normalizedItems.filter((item) => item.quantity > item.reorderLevel).length,
+              lowStock: lowStockItems.length,
+              critical: criticalItems.length,
+              items: normalizedItems.slice(0, 5),
+            },
+            demand_trend: demandAverage > 0 ? 'steady' : 'unknown',
+            delay_risk: lowStockCount > 0 ? 'high' : 'low',
+          });
+
+          parsedInsights = parseInsights(insightsRes?.data?.recommendations);
+        } catch (insightsError) {
+          warning = 'AI insights are temporarily unavailable. Showing current operational data.';
+        }
 
         setInventory(Array.isArray(inventoryData) ? inventoryData : []);
         setForecast(Array.isArray(forecastData) ? forecastData : []);
         setInsights(parsedInsights);
+        if (demandResult.status !== 'fulfilled' && warning) {
+          setError('Demand forecast and AI insights are temporarily unavailable. Showing current inventory data.');
+        } else if (demandResult.status !== 'fulfilled') {
+          setError('Demand forecast is temporarily unavailable. Showing current inventory data.');
+        } else if (warning) {
+          setError(warning);
+        }
       } catch (err) {
         setError('Unable to load dashboard data right now. Please try again.');
       } finally {

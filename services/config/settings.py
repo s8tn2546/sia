@@ -1,3 +1,4 @@
+import logging
 import os
 from pathlib import Path
 
@@ -5,6 +6,8 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 load_dotenv(BASE_DIR / ".env", override=True)
+
+logger = logging.getLogger(__name__)
 
 
 class Settings:
@@ -25,3 +28,14 @@ class Settings:
 
 
 settings = Settings()
+
+# Validate and log configuration on startup
+if settings.env == "production":
+    if not settings.openai_api_key and not settings.gemini_api_key:
+        logger.warning("Missing LLM API key (OPENAI_API_KEY or GEMINI_API_KEY). LLM features disabled.")
+    if not settings.google_maps_api_key:
+        logger.warning("GOOGLE_MAPS_API_KEY not set. Using fallback routes.")
+    if not settings.openweather_api_key:
+        logger.warning("OPENWEATHER_API_KEY not set. Using fallback weather data.")
+
+logger.info(f"Environment: {settings.env}, Host: {settings.host}, Port: {settings.port}")
